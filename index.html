@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>💬 WA Minimal + Hapus & Batalkan</title>
+    <title>💬 WA + Suara Masuk & Kirim</title>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js">
@@ -586,29 +586,72 @@
         const menuUnsend = document.getElementById('menuUnsend');
 
         // ============================================================
-        // 3. NOTIFIKASI SUARA
+        // 3. SUARA (Web Audio)
         // ============================================================
         let audioCtx = null;
 
-        function playNotificationSound() {
-            try {
-                if (!audioCtx) {
+        // Inisialisasi audio context (harus dipanggil setelah interaksi user)
+        function initAudio() {
+            if (!audioCtx) {
+                try {
                     audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.warn('Web Audio tidak didukung');
                 }
+            }
+            // Resume jika suspend
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume().catch(() => {});
+            }
+        }
+
+        // Suara untuk pesan masuk (nada tinggi, durasi 0.15s)
+        function playIncomingSound() {
+            try {
+                initAudio();
+                if (!audioCtx) return;
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
                 osc.frequency.value = 800;
                 osc.type = 'sine';
-                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
-                osc.start(audioCtx.currentTime);
-                osc.stop(audioCtx.currentTime + 0.15);
+                const now = audioCtx.currentTime;
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                osc.start(now);
+                osc.stop(now + 0.15);
             } catch (e) {
+                // Fallback
                 try {
                     const audio = new Audio('data:audio/wav;base64,UklGRlQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAABCAAAAAAA=');
                     audio.volume = 0.5;
+                    audio.play().catch(() => {});
+                } catch (e2) {}
+            }
+        }
+
+        // Suara untuk pesan terkirim (nada lebih rendah, pendek, seperti 'pop')
+        function playOutgoingSound() {
+            try {
+                initAudio();
+                if (!audioCtx) return;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.frequency.value = 600;
+                osc.type = 'sine';
+                const now = audioCtx.currentTime;
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            } catch (e) {
+                // Fallback
+                try {
+                    const audio = new Audio('data:audio/wav;base64,UklGRlQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAABCAAAAAAA=');
+                    audio.volume = 0.3;
                     audio.play().catch(() => {});
                 } catch (e2) {}
             }
@@ -803,8 +846,9 @@
 
             renderMessage(key, data, isOwn);
 
+            // Jika pesan dari orang lain dan belum dibaca, mainkan suara masuk
             if (!isOwn && data.read !== true && !notifiedKeys.has(key)) {
-                playNotificationSound();
+                playIncomingSound(); // <-- suara pesan masuk
                 notifiedKeys.add(key);
                 messagesRef.child(key).update({ read: true })
                     .catch(err => console.warn('Gagal update read:', err));
@@ -837,7 +881,7 @@
         });
 
         // ============================================================
-        // 9. KIRIM PESAN
+        // 9. KIRIM PESAN (dengan suara terkirim)
         // ============================================================
         function sendMessage() {
             const text = messageInput.value.trim();
@@ -859,10 +903,15 @@
 
             newRef.set(payload)
                 .then(() => {
+                    // Suara pesan terkirim
+                    playOutgoingSound();
+
+                    // Update read setelah 1 detik (simulasi dibaca)
                     setTimeout(() => {
                         newRef.update({ read: true })
                             .catch(err => console.warn('Gagal update read:', err));
                     }, 1000);
+
                     messageInput.value = '';
                     messageInput.focus();
                     emojiPickerContainer.classList.remove('show');
@@ -943,7 +992,7 @@
         });
         observer.observe(container, { childList: true, subtree: true });
 
-        console.log('💬 WA Minimal + menu kecil siap!');
+        console.log('💬 WA + Suara Masuk & Kirim siap!');
     </script>
 
 </body>
