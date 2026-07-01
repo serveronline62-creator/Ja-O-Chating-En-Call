@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>💬 WA Clone + Hapus & Batalkan</title>
+    <title>💬 WA Modern + Hapus & Batalkan</title>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js">
@@ -183,11 +183,16 @@
             font-size: 15px;
             position: relative;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            transition: background 0.1s;
         }
         .message.own .bubble {
             background: #dcf8c6;
             color: #1a1a1a;
             border-bottom-right-radius: 4px;
+            cursor: pointer;
+        }
+        .message.own .bubble:hover {
+            background: #d0f0b8;
         }
         .message.other .bubble {
             background: #ffffff;
@@ -210,10 +215,9 @@
         .message .footer {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
             margin-top: 3px;
             padding: 0 4px;
-            flex-wrap: wrap;
         }
         .message .time {
             font-size: 10px;
@@ -228,29 +232,6 @@
             line-height: 1;
         }
         .message.other .check {
-            display: none;
-        }
-        /* Tombol aksi (hapus & batal) */
-        .message .action-btn {
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            padding: 0 2px;
-            line-height: 1;
-            color: #7a7a7a;
-            transition: color 0.2s, transform 0.1s;
-        }
-        .message .action-btn:hover {
-            color: #e74c3c;
-        }
-        .message .action-btn:active {
-            transform: scale(0.8);
-        }
-        .message.own .action-btn {
-            display: inline-block;
-        }
-        .message.other .action-btn {
             display: none;
         }
 
@@ -388,6 +369,62 @@
             border-radius: 16px;
         }
 
+        /* ----- CONTEXT MENU (modern) ----- */
+        .context-menu {
+            position: fixed;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+            padding: 12px 0;
+            min-width: 200px;
+            z-index: 1000;
+            display: none;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 0.15s, transform 0.15s;
+            overflow: hidden;
+        }
+        .context-menu.show {
+            display: block;
+            opacity: 1;
+            transform: scale(1);
+        }
+        .context-menu .menu-item {
+            padding: 12px 20px;
+            font-size: 15px;
+            color: #1a1a1a;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: background 0.1s;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+        }
+        .context-menu .menu-item:hover {
+            background: #f0f0f0;
+        }
+        .context-menu .menu-item:active {
+            background: #e0e0e0;
+        }
+        .context-menu .menu-item .icon {
+            font-size: 20px;
+        }
+        .context-menu .menu-item.danger {
+            color: #e74c3c;
+        }
+        .context-menu .menu-item.danger:hover {
+            background: #fde8e8;
+        }
+        .context-menu .divider {
+            height: 1px;
+            background: #e0e0e0;
+            margin: 4px 12px;
+        }
+
         /* Responsive */
         @media (max-width: 480px) {
             .chat-header .info h1 {
@@ -422,6 +459,13 @@
             }
             emoji-picker {
                 height: 240px;
+            }
+            .context-menu {
+                min-width: 160px;
+            }
+            .context-menu .menu-item {
+                padding: 10px 16px;
+                font-size: 14px;
             }
         }
         @media (max-width: 380px) {
@@ -487,6 +531,17 @@
         </div>
     </div>
 
+    <!-- Context Menu -->
+    <div class="context-menu" id="contextMenu">
+        <button class="menu-item" id="menuDelete">
+            <span class="icon">🗑️</span> Hapus untuk saya
+        </button>
+        <div class="divider"></div>
+        <button class="menu-item danger" id="menuUnsend">
+            <span class="icon">❌</span> Batalkan untuk semua
+        </button>
+    </div>
+
     <script>
         // ============================================================
         // 1. FIREBASE KONFIGURASI
@@ -516,6 +571,9 @@
         const emojiToggle = document.getElementById('emojiToggle');
         const emojiPickerContainer = document.getElementById('emojiPickerContainer');
         const emojiPicker = document.getElementById('emojiPicker');
+        const contextMenu = document.getElementById('contextMenu');
+        const menuDelete = document.getElementById('menuDelete');
+        const menuUnsend = document.getElementById('menuUnsend');
 
         // ============================================================
         // 3. NOTIFIKASI SUARA
@@ -570,7 +628,91 @@
         }
 
         // ============================================================
-        // 5. RENDER PESAN (dengan tombol aksi)
+        // 5. CONTEXT MENU
+        // ============================================================
+        let currentMessageKey = null;
+        let currentMessageElement = null;
+
+        function showContextMenu(event, key, element) {
+            event.preventDefault();
+            currentMessageKey = key;
+            currentMessageElement = element;
+
+            // Posisi menu
+            let x = event.clientX || event.touches?.[0]?.clientX || 0;
+            let y = event.clientY || event.touches?.[0]?.clientY || 0;
+
+            // Jika tidak ada event (misal dari keyboard) pakai posisi tengah
+            if (x === 0 && y === 0) {
+                const rect = element.getBoundingClientRect();
+                x = rect.left + rect.width / 2;
+                y = rect.top + rect.height / 2;
+            }
+
+            // Tampilkan menu
+            contextMenu.style.left = x + 'px';
+            contextMenu.style.top = y + 'px';
+            contextMenu.classList.add('show');
+
+            // Pastikan tidak keluar layar
+            const menuRect = contextMenu.getBoundingClientRect();
+            if (menuRect.right > window.innerWidth) {
+                contextMenu.style.left = (window.innerWidth - menuRect.width - 10) + 'px';
+            }
+            if (menuRect.bottom > window.innerHeight) {
+                contextMenu.style.top = (window.innerHeight - menuRect.height - 10) + 'px';
+            }
+        }
+
+        function hideContextMenu() {
+            contextMenu.classList.remove('show');
+            currentMessageKey = null;
+            currentMessageElement = null;
+        }
+
+        // Event untuk menu item
+        menuDelete.addEventListener('click', () => {
+            if (currentMessageKey && currentMessageElement) {
+                // Hapus dari DOM (delete for me)
+                const msgDiv = currentMessageElement;
+                msgDiv.style.transition = 'opacity 0.2s';
+                msgDiv.style.opacity = '0';
+                setTimeout(() => {
+                    msgDiv.remove();
+                    updateEmptyState();
+                }, 200);
+                hideContextMenu();
+            }
+        });
+
+        menuUnsend.addEventListener('click', () => {
+            if (currentMessageKey) {
+                if (confirm('Batalkan pesan ini untuk semua orang?')) {
+                    messagesRef.child(currentMessageKey).remove()
+                        .then(() => {
+                            // Pesan akan dihapus oleh listener child_removed
+                            hideContextMenu();
+                        })
+                        .catch(err => {
+                            console.error('Gagal batalkan:', err);
+                            alert('Gagal membatalkan pesan.');
+                            hideContextMenu();
+                        });
+                } else {
+                    hideContextMenu();
+                }
+            }
+        });
+
+        // Klik di luar menu untuk menutup
+        document.addEventListener('click', (e) => {
+            if (!contextMenu.contains(e.target)) {
+                hideContextMenu();
+            }
+        });
+
+        // ============================================================
+        // 6. RENDER PESAN (tanpa tombol aksi)
         // ============================================================
         function renderMessage(key, data, isOwn) {
             if (emptyState.style.display !== 'none') {
@@ -611,59 +753,34 @@
             footer.appendChild(timeSpan);
             if (isOwn) {
                 footer.appendChild(checkSpan);
-
-                // Tombol hapus (delete for me)
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'action-btn';
-                deleteBtn.textContent = '🗑️';
-                deleteBtn.title = 'Hapus (untuk saya)';
-                deleteBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if (confirm('Hapus pesan ini dari tampilan Anda?')) {
-                        // Hanya hapus dari DOM
-                        msgDiv.style.transition = 'opacity 0.2s';
-                        msgDiv.style.opacity = '0';
-                        setTimeout(() => {
-                            msgDiv.remove();
-                            updateEmptyState();
-                        }, 200);
-                    }
-                });
-
-                // Tombol batalkan (unsend for everyone)
-                const unsendBtn = document.createElement('button');
-                unsendBtn.className = 'action-btn';
-                unsendBtn.textContent = '❌';
-                unsendBtn.title = 'Batalkan untuk semua';
-                unsendBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if (confirm('Batalkan pesan ini untuk semua orang?')) {
-                        // Hapus dari Firebase
-                        messagesRef.child(key).remove()
-                            .then(() => {
-                                // Pesan akan dihapus oleh listener child_removed
-                            })
-                            .catch(err => {
-                                console.error('Gagal batalkan:', err);
-                                alert('Gagal membatalkan pesan.');
-                            });
-                    }
-                });
-
-                footer.appendChild(deleteBtn);
-                footer.appendChild(unsendBtn);
             }
 
             msgDiv.appendChild(senderSpan);
             msgDiv.appendChild(bubble);
             msgDiv.appendChild(footer);
 
+            // Event klik pada bubble (hanya untuk pesan sendiri)
+            if (isOwn) {
+                bubble.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showContextMenu(e, key, msgDiv);
+                });
+                // Juga bisa pada seluruh div agar area klik lebih luas
+                msgDiv.addEventListener('click', (e) => {
+                    // Jika klik terjadi pada bubble, sudah ditangani di atas.
+                    // Tapi jika klik di luar bubble (footer, sender) tetap munculkan menu.
+                    if (!e.target.closest('.bubble')) {
+                        showContextMenu(e, key, msgDiv);
+                    }
+                });
+            }
+
             container.appendChild(msgDiv);
             scrollToBottom();
         }
 
         // ============================================================
-        // 6. UPDATE CENTANG
+        // 7. UPDATE CENTANG
         // ============================================================
         function updateCheckMark(key, read) {
             const msgDiv = container.querySelector(`[data-key="${key}"]`);
@@ -675,12 +792,11 @@
         }
 
         // ============================================================
-        // 7. LISTENER REALTIME
+        // 8. LISTENER REALTIME
         // ============================================================
         let isInitialLoad = true;
         const notifiedKeys = new Set();
 
-        // child_added
         messagesRef.orderByChild('timestamp').limitToLast(100).on('child_added', (snapshot) => {
             const key = snapshot.key;
             const data = snapshot.val();
@@ -701,7 +817,6 @@
             }
         });
 
-        // child_changed (untuk update read)
         messagesRef.on('child_changed', (snapshot) => {
             const key = snapshot.key;
             const data = snapshot.val();
@@ -710,7 +825,6 @@
             }
         });
 
-        // child_removed (untuk batalkan pesan)
         messagesRef.on('child_removed', (snapshot) => {
             const key = snapshot.key;
             const msgDiv = container.querySelector(`[data-key="${key}"]`);
@@ -725,7 +839,7 @@
         });
 
         // ============================================================
-        // 8. KIRIM PESAN
+        // 9. KIRIM PESAN
         // ============================================================
         function sendMessage() {
             const text = messageInput.value.trim();
@@ -762,7 +876,7 @@
         }
 
         // ============================================================
-        // 9. EMOJI PICKER
+        // 10. EMOJI PICKER
         // ============================================================
         let isEmojiPickerVisible = false;
 
@@ -794,7 +908,7 @@
         });
 
         // ============================================================
-        // 10. EVENT LISTENERS
+        // 11. EVENT LISTENERS
         // ============================================================
         sendBtn.addEventListener('click', sendMessage);
 
@@ -813,7 +927,7 @@
         });
 
         // ============================================================
-        // 11. INISIALISASI
+        // 12. INISIALISASI
         // ============================================================
         const savedName = sessionStorage.getItem('chat_user');
         if (savedName) {
@@ -831,7 +945,7 @@
         });
         observer.observe(container, { childList: true, subtree: true });
 
-        console.log('💬 WA Clone + Hapus & Batalkan siap!');
+        console.log('💬 WA Modern + Hapus & Batalkan via klik teks siap!');
     </script>
 
 </body>
