@@ -2,13 +2,17 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>💬 Chat Hijau</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <title>💬 Chat Hijau + Emoji</title>
 
     <!-- Firebase SDK (compat v9) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js">
     </script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js">
+    </script>
+
+    <!-- Emoji Picker (ringan) -->
+    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.18.2/index.js">
     </script>
 
     <style>
@@ -22,13 +26,13 @@
         body {
             font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
             background: #e5ddd5;
-            /* background khas WA */
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            padding: 16px;
+            padding: 0;
+            /* hilangkan padding agar full di HP */
         }
 
         /* ----- CHAT CONTAINER ----- */
@@ -36,20 +40,31 @@
             width: 100%;
             max-width: 520px;
             background: #ffffff;
-            border-radius: 28px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            height: 90vh;
-            max-height: 700px;
-            border: 1px solid rgba(0, 0, 0, 0.04);
+            height: 100vh;
+            /* full height di HP */
+            max-height: 100vh;
+            border: none;
+            border-radius: 0;
+            /* flat di HP, biar full */
+        }
+
+        @media (min-width: 600px) {
+            .chat-container {
+                height: 90vh;
+                max-height: 700px;
+                border-radius: 28px;
+                border: 1px solid rgba(0, 0, 0, 0.04);
+                margin: 16px;
+            }
         }
 
         /* ----- HEADER (hijau WhatsApp) ----- */
         .chat-header {
             background: #00a884;
-            /* hijau WA */
             padding: 14px 20px;
             display: flex;
             align-items: center;
@@ -102,7 +117,7 @@
             }
         }
 
-        /* ----- MESSAGE AREA (background pattern ringan) ----- */
+        /* ----- MESSAGE AREA (background WA) ----- */
         .messages-wrapper {
             flex: 1;
             overflow-y: auto;
@@ -111,10 +126,10 @@
             flex-direction: column;
             gap: 6px;
             background: #efeae2;
-            /* latar WA */
             background-image: radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.2) 0%, transparent 30%),
                 radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.15) 0%, transparent 40%);
             scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
         }
 
         .messages-wrapper::-webkit-scrollbar {
@@ -130,7 +145,7 @@
             border-radius: 10px;
         }
 
-        /* ----- MESSAGE BUBBLE (gaya WA) ----- */
+        /* ----- MESSAGE BUBBLE ----- */
         .message {
             display: flex;
             flex-direction: column;
@@ -169,14 +184,12 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
         }
 
-        /* Bubble sendiri: hijau muda khas WA */
         .message.own .bubble {
             background: #dcf8c6;
             color: #1a1a1a;
             border-bottom-right-radius: 4px;
         }
 
-        /* Bubble orang lain: abu-abu */
         .message.other .bubble {
             background: #ffffff;
             color: #1a1a1a;
@@ -237,26 +250,27 @@
             color: #999;
         }
 
-        /* ----- INPUT AREA (dengan latar putih) ----- */
+        /* ----- INPUT AREA (dengan emoji button) ----- */
         .input-area {
-            padding: 12px 18px 14px;
+            padding: 8px 12px 12px;
             background: #f0f0f0;
             border-top: 1px solid #d1d1d1;
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
         }
 
         .input-row {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             align-items: center;
+            flex-wrap: nowrap;
         }
 
         .input-row input[type="text"] {
             flex: 1;
-            padding: 10px 16px;
+            padding: 10px 14px;
             border: none;
             border-radius: 30px;
             background: #ffffff;
@@ -265,6 +279,7 @@
             outline: none;
             transition: box-shadow 0.2s;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            min-width: 0;
         }
 
         .input-row input[type="text"]::placeholder {
@@ -276,13 +291,39 @@
         }
 
         .input-row input[type="text"].name-input {
-            flex: 0 0 120px;
+            flex: 0 0 100px;
             font-weight: 500;
             background: #f8f8f8;
         }
 
-        .input-row button {
-            padding: 10px 20px;
+        /* Tombol emoji */
+        .emoji-btn {
+            background: transparent;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 4px 6px;
+            line-height: 1;
+            border-radius: 50%;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            flex-shrink: 0;
+        }
+
+        .emoji-btn:hover {
+            background: rgba(0, 0, 0, 0.06);
+        }
+
+        .emoji-btn:active {
+            transform: scale(0.9);
+        }
+
+        .input-row button.send-btn {
+            padding: 10px 18px;
             border: none;
             border-radius: 30px;
             background: #00a884;
@@ -294,77 +335,100 @@
             white-space: nowrap;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
             box-shadow: 0 2px 8px rgba(0, 168, 132, 0.3);
+            flex-shrink: 0;
         }
 
-        .input-row button:hover {
+        .input-row button.send-btn:hover {
             background: #008f72;
             transform: scale(1.02);
             box-shadow: 0 4px 16px rgba(0, 168, 132, 0.4);
         }
 
-        .input-row button:active {
+        .input-row button.send-btn:active {
             transform: scale(0.97);
         }
 
-        .input-row button:disabled {
+        .input-row button.send-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
         }
 
-        /* ----- RESPONSIVE ----- */
+        /* Emoji picker container */
+        .emoji-picker-container {
+            position: relative;
+            width: 100%;
+            display: none;
+            /* disembunyikan default */
+            justify-content: flex-end;
+            margin-top: 4px;
+        }
+
+        .emoji-picker-container.show {
+            display: flex;
+        }
+
+        emoji-picker {
+            width: 100%;
+            max-width: 350px;
+            height: 280px;
+            --background: #fff;
+            --border-color: #ddd;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            border-radius: 16px;
+        }
+
+        /* Responsive */
         @media (max-width: 480px) {
-            .chat-container {
-                height: 100vh;
-                max-height: none;
-                border-radius: 0;
-                box-shadow: none;
-            }
-
-            .input-row {
-                flex-wrap: wrap;
-            }
-
-            .input-row input[type="text"].name-input {
-                flex: 1 1 100%;
-            }
-
-            .input-row input[type="text"].msg-input {
-                flex: 1 1 60%;
-            }
-
-            .input-row button {
-                flex: 1;
-                justify-content: center;
-                padding: 10px 14px;
-            }
-
             .chat-header h1 {
                 font-size: 17px;
             }
-
             .message .bubble {
                 font-size: 14px;
                 padding: 8px 12px;
+            }
+            .input-row input[type="text"].name-input {
+                flex: 0 0 80px;
+                font-size: 14px;
+                padding: 8px 12px;
+            }
+            .input-row input[type="text"].msg-input {
+                font-size: 14px;
+                padding: 8px 12px;
+            }
+            .emoji-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 24px;
+            }
+            .input-row button.send-btn {
+                padding: 8px 14px;
+                font-size: 14px;
+            }
+            emoji-picker {
+                height: 240px;
             }
         }
 
         @media (max-width: 380px) {
             .input-row {
-                flex-direction: column;
+                flex-wrap: wrap;
             }
-
-            .input-row input[type="text"].name-input,
+            .input-row input[type="text"].name-input {
+                flex: 1 1 100%;
+            }
             .input-row input[type="text"].msg-input {
-                flex: 1 1 auto;
-                width: 100%;
+                flex: 1 1 60%;
             }
-
-            .input-row button {
-                width: 100%;
+            .input-row button.send-btn {
+                flex: 1;
+                justify-content: center;
+            }
+            .emoji-btn {
+                flex: 0 0 40px;
             }
         }
     </style>
@@ -389,7 +453,7 @@
             </div>
         </div>
 
-        <!-- INPUT -->
+        <!-- INPUT AREA -->
         <div class="input-area">
             <div class="input-row">
                 <input
@@ -408,10 +472,15 @@
                 maxlength="500"
                 autocomplete="off"
                 />
-                <button id="sendBtn">
+                <button class="emoji-btn" id="emojiToggle" type="button" aria-label="Emoji">😊</button>
+                <button class="send-btn" id="sendBtn">
                     <span>Kirim</span>
                     <span style="font-size:18px;">➤</span>
                 </button>
+            </div>
+            <!-- Tempat emoji picker -->
+            <div class="emoji-picker-container" id="emojiPickerContainer">
+                <emoji-picker id="emojiPicker"></emoji-picker>
             </div>
         </div>
 
@@ -443,6 +512,9 @@
         const nameInput = document.getElementById('nameInput');
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
+        const emojiToggle = document.getElementById('emojiToggle');
+        const emojiPickerContainer = document.getElementById('emojiPickerContainer');
+        const emojiPicker = document.getElementById('emojiPicker');
 
         // ============================================================
         // 3. FUNGSI BANTU
@@ -546,6 +618,8 @@
                 .then(() => {
                     messageInput.value = '';
                     messageInput.focus();
+                    // Sembunyikan emoji picker setelah kirim
+                    emojiPickerContainer.classList.remove('show');
                 })
                 .catch((err) => {
                     console.error('Gagal mengirim:', err);
@@ -554,7 +628,48 @@
         }
 
         // ============================================================
-        // 7. EVENT LISTENERS
+        // 7. EMOJI PICKER
+        // ============================================================
+        let isEmojiPickerVisible = false;
+
+        emojiToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            isEmojiPickerVisible = !isEmojiPickerVisible;
+            emojiPickerContainer.classList.toggle('show', isEmojiPickerVisible);
+            if (isEmojiPickerVisible) {
+                // Fokus ke input tidak diperlukan, biarkan picker terbuka
+            }
+        });
+
+        // Saat emoji dipilih
+        emojiPicker.addEventListener('emoji-click', (event) => {
+            const emoji = event.detail.unicode;
+            // Sisipkan di posisi kursor di input
+            const start = messageInput.selectionStart;
+            const end = messageInput.selectionEnd;
+            const text = messageInput.value;
+            messageInput.value = text.substring(0, start) + emoji + text.substring(end);
+            // Pindahkan kursor setelah emoji
+            const newPos = start + emoji.length;
+            messageInput.setSelectionRange(newPos, newPos);
+            messageInput.focus();
+            // Tutup picker (opsional, biarkan terbuka agar bisa pilih banyak)
+            // Kita biarkan terbuka, user bisa klik lagi untuk tutup
+        });
+
+        // Tutup picker jika klik di luar
+        document.addEventListener('click', (e) => {
+            const target = e.target;
+            if (!target.closest('.emoji-picker-container') && !target.closest('.emoji-btn')) {
+                if (emojiPickerContainer.classList.contains('show')) {
+                    emojiPickerContainer.classList.remove('show');
+                    isEmojiPickerVisible = false;
+                }
+            }
+        });
+
+        // ============================================================
+        // 8. EVENT LISTENERS
         // ============================================================
         sendBtn.addEventListener('click', sendMessage);
 
@@ -573,7 +688,7 @@
         });
 
         // ============================================================
-        // 8. INISIALISASI
+        // 9. INISIALISASI
         // ============================================================
         const savedName = sessionStorage.getItem('chat_user');
         if (savedName) {
@@ -591,7 +706,7 @@
         });
         observer.observe(container, { childList: true, subtree: true });
 
-        console.log('💬 Chat Hijau siap! (Firebase)');
+        console.log('💬 Chat Hijau + Emoji siap! (Firebase)');
     </script>
 
 </body>
