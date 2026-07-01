@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>💬 WA + Hapus Semua Chat</title>
+    <title>💬 WA + Suara Burung</title>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js">
@@ -586,7 +586,7 @@
         <div class="chat-header">
             <div class="avatar">💬</div>
             <div class="info">
-                <h1>Chating</h1>
+                <h1>Chat Hijau</h1>
                 <div class="status">Online</div>
             </div>
             <div class="actions">
@@ -678,7 +678,7 @@
         const clearAllChat = document.getElementById('clearAllChat');
 
         // ============================================================
-        // 3. SUARA (Web Audio) - Suara Siulan untuk pesan masuk
+        // 3. SUARA BURUNG BERKICAU (Web Audio)
         // ============================================================
         let audioCtx = null;
 
@@ -695,27 +695,48 @@
             }
         }
 
-        function playIncomingSound() {
+        // Suara burung berkicau
+        function playBirdSound() {
             try {
                 initAudio();
                 if (!audioCtx) return;
+
                 const now = audioCtx.currentTime;
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.frequency.setValueAtTime(1000, now);
-                osc.frequency.linearRampToValueAtTime(1500, now + 0.08);
-                osc.frequency.linearRampToValueAtTime(1200, now + 0.16);
-                osc.frequency.linearRampToValueAtTime(1400, now + 0.24);
-                osc.type = 'sine';
-                gain.gain.setValueAtTime(0, now);
-                gain.gain.linearRampToValueAtTime(0.18, now + 0.02);
-                gain.gain.linearRampToValueAtTime(0.12, now + 0.15);
-                gain.gain.linearRampToValueAtTime(0, now + 0.3);
-                osc.start(now);
-                osc.stop(now + 0.3);
+                
+                // Definisikan pola kicauan: [frekuensi, durasi, delay dari awal]
+                const notes = [
+                    { freq: 1200, dur: 0.06, start: 0.00 },
+                    { freq: 1800, dur: 0.05, start: 0.08 },
+                    { freq: 1400, dur: 0.07, start: 0.15 },
+                    { freq: 2000, dur: 0.05, start: 0.24 },
+                    { freq: 1600, dur: 0.06, start: 0.32 },
+                    { freq: 2200, dur: 0.04, start: 0.40 },
+                    { freq: 1300, dur: 0.08, start: 0.48 }
+                ];
+
+                notes.forEach(note => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(note.freq, now + note.start);
+                    
+                    // Envelope volume: naik cepat, turun perlahan
+                    const attack = 0.01;
+                    const release = 0.03;
+                    gain.gain.setValueAtTime(0, now + note.start);
+                    gain.gain.linearRampToValueAtTime(0.15, now + note.start + attack);
+                    gain.gain.linearRampToValueAtTime(0.12, now + note.start + note.dur * 0.5);
+                    gain.gain.linearRampToValueAtTime(0, now + note.start + note.dur);
+                    
+                    osc.start(now + note.start);
+                    osc.stop(now + note.start + note.dur);
+                });
+
             } catch (e) {
+                // Fallback ke suara sederhana jika Web Audio gagal
                 try {
                     const audio = new Audio('data:audio/wav;base64,UklGRlQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAABCAAAAAAA=');
                     audio.volume = 0.5;
@@ -724,6 +745,7 @@
             }
         }
 
+        // Suara pesan terkirim (pop pendek)
         function playOutgoingSound() {
             try {
                 initAudio();
@@ -779,19 +801,16 @@
             headerDropdown.classList.toggle('show');
         });
 
-        // Tutup dropdown saat klik di luar
         document.addEventListener('click', (e) => {
             if (!headerDropdown.contains(e.target) && e.target !== headerMenuBtn) {
                 headerDropdown.classList.remove('show');
             }
         });
 
-        // Hapus semua chat
         clearAllChat.addEventListener('click', () => {
             if (confirm('Hapus semua pesan dari semua pengguna? Tindakan ini tidak dapat dibatalkan.')) {
                 messagesRef.remove()
                     .then(() => {
-                        // Hapus semua pesan dari DOM
                         const messages = container.querySelectorAll('.message');
                         messages.forEach(msg => {
                             msg.style.transition = 'opacity 0.2s';
@@ -800,7 +819,6 @@
                         setTimeout(() => {
                             messages.forEach(msg => msg.remove());
                             updateEmptyState();
-                            // Reset notifikasi keys
                             notifiedKeys.clear();
                         }, 200);
                         headerDropdown.classList.remove('show');
@@ -978,8 +996,9 @@
 
             renderMessage(key, data, isOwn);
 
+            // Jika pesan dari orang lain dan belum dibaca, mainkan suara burung
             if (!isOwn && data.read !== true && !notifiedKeys.has(key)) {
-                playIncomingSound();
+                playBirdSound(); // <-- suara burung berkicau
                 notifiedKeys.add(key);
                 messagesRef.child(key).update({ read: true })
                     .catch(err => console.warn('Gagal update read:', err));
@@ -1119,7 +1138,7 @@
         });
         observer.observe(container, { childList: true, subtree: true });
 
-        console.log('💬 WA + Hapus Semua Chat siap!');
+        console.log('💬 WA + Suara Burung Berkicau siap!');
     </script>
 
 </body>
