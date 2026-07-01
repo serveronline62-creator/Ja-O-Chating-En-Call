@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>💬 WA + Suara Siulan</title>
+    <title>💬 WA + Hapus Semua Chat</title>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js">
@@ -64,6 +64,7 @@
             gap: 12px;
             flex-shrink: 0;
             border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+            position: relative;
         }
         .chat-header .avatar {
             width: 40px;
@@ -119,10 +120,81 @@
             gap: 16px;
             color: #fff;
             font-size: 20px;
+            align-items: center;
         }
         .chat-header .actions span {
             cursor: default;
             opacity: 0.9;
+        }
+        .chat-header .actions .menu-dots {
+            font-size: 28px;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0 4px;
+            user-select: none;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+        }
+        .chat-header .actions .menu-dots:hover {
+            opacity: 1;
+        }
+
+        /* Dropdown menu header */
+        .header-dropdown {
+            position: absolute;
+            right: 12px;
+            top: 60px;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            padding: 8px 0;
+            min-width: 180px;
+            display: none;
+            opacity: 0;
+            transform: scale(0.92);
+            transition: opacity 0.12s, transform 0.12s;
+            z-index: 1100;
+            overflow: hidden;
+        }
+        .header-dropdown.show {
+            display: block;
+            opacity: 1;
+            transform: scale(1);
+        }
+        .header-dropdown .drop-item {
+            padding: 10px 18px;
+            font-size: 14px;
+            color: #1a1a1a;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.1s;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+        }
+        .header-dropdown .drop-item:hover {
+            background: #f0f0f0;
+        }
+        .header-dropdown .drop-item:active {
+            background: #e0e0e0;
+        }
+        .header-dropdown .drop-item .icon {
+            font-size: 18px;
+        }
+        .header-dropdown .drop-item.danger {
+            color: #e74c3c;
+        }
+        .header-dropdown .drop-item.danger:hover {
+            background: #fde8e8;
+        }
+        .header-dropdown .divider {
+            height: 1px;
+            background: #e8e8e8;
+            margin: 4px 12px;
         }
 
         /* ----- MESSAGE AREA ----- */
@@ -477,6 +549,14 @@
             .context-menu .divider {
                 margin: 2px 8px;
             }
+            .header-dropdown {
+                right: 8px;
+                min-width: 150px;
+            }
+            .header-dropdown .drop-item {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
         }
         @media (max-width: 380px) {
             .input-row {
@@ -512,6 +592,13 @@
             <div class="actions">
                 <span>📷</span>
                 <span>📞</span>
+                <span class="menu-dots" id="headerMenuBtn">⋮</span>
+            </div>
+            <!-- Dropdown menu -->
+            <div class="header-dropdown" id="headerDropdown">
+                <button class="drop-item danger" id="clearAllChat">
+                    <span class="icon">🗑️</span> Hapus Semua Chat
+                </button>
             </div>
         </div>
 
@@ -541,7 +628,7 @@
         </div>
     </div>
 
-    <!-- Context Menu (sangat kecil) -->
+    <!-- Context Menu (untuk pesan) -->
     <div class="context-menu" id="contextMenu">
         <button class="menu-item" id="menuDelete">
             <span class="icon">🗑️</span> Hapus saya
@@ -585,6 +672,11 @@
         const menuDelete = document.getElementById('menuDelete');
         const menuUnsend = document.getElementById('menuUnsend');
 
+        // Header menu
+        const headerMenuBtn = document.getElementById('headerMenuBtn');
+        const headerDropdown = document.getElementById('headerDropdown');
+        const clearAllChat = document.getElementById('clearAllChat');
+
         // ============================================================
         // 3. SUARA (Web Audio) - Suara Siulan untuk pesan masuk
         // ============================================================
@@ -603,39 +695,27 @@
             }
         }
 
-        // Suara siulan untuk pesan masuk
         function playIncomingSound() {
             try {
                 initAudio();
                 if (!audioCtx) return;
-
                 const now = audioCtx.currentTime;
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
-
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
-
-                // Frekuensi: mulai dari 1000Hz, naik ke 1500Hz, lalu turun ke 1200Hz, lalu naik ke 1400Hz
-                // Memberi efek siulan yang meliuk
                 osc.frequency.setValueAtTime(1000, now);
                 osc.frequency.linearRampToValueAtTime(1500, now + 0.08);
                 osc.frequency.linearRampToValueAtTime(1200, now + 0.16);
                 osc.frequency.linearRampToValueAtTime(1400, now + 0.24);
-
                 osc.type = 'sine';
-
-                // Envelope volume
                 gain.gain.setValueAtTime(0, now);
                 gain.gain.linearRampToValueAtTime(0.18, now + 0.02);
                 gain.gain.linearRampToValueAtTime(0.12, now + 0.15);
                 gain.gain.linearRampToValueAtTime(0, now + 0.3);
-
                 osc.start(now);
                 osc.stop(now + 0.3);
-
             } catch (e) {
-                // Fallback ke suara sederhana
                 try {
                     const audio = new Audio('data:audio/wav;base64,UklGRlQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAABCAAAAAAA=');
                     audio.volume = 0.5;
@@ -644,7 +724,6 @@
             }
         }
 
-        // Suara pesan terkirim (pop pendek)
         function playOutgoingSound() {
             try {
                 initAudio();
@@ -693,7 +772,48 @@
         }
 
         // ============================================================
-        // 5. CONTEXT MENU
+        // 5. HEADER DROPDOWN (Hapus Semua Chat)
+        // ============================================================
+        headerMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            headerDropdown.classList.toggle('show');
+        });
+
+        // Tutup dropdown saat klik di luar
+        document.addEventListener('click', (e) => {
+            if (!headerDropdown.contains(e.target) && e.target !== headerMenuBtn) {
+                headerDropdown.classList.remove('show');
+            }
+        });
+
+        // Hapus semua chat
+        clearAllChat.addEventListener('click', () => {
+            if (confirm('Hapus semua pesan dari semua pengguna? Tindakan ini tidak dapat dibatalkan.')) {
+                messagesRef.remove()
+                    .then(() => {
+                        // Hapus semua pesan dari DOM
+                        const messages = container.querySelectorAll('.message');
+                        messages.forEach(msg => {
+                            msg.style.transition = 'opacity 0.2s';
+                            msg.style.opacity = '0';
+                        });
+                        setTimeout(() => {
+                            messages.forEach(msg => msg.remove());
+                            updateEmptyState();
+                            // Reset notifikasi keys
+                            notifiedKeys.clear();
+                        }, 200);
+                        headerDropdown.classList.remove('show');
+                    })
+                    .catch(err => {
+                        console.error('Gagal hapus semua:', err);
+                        alert('Gagal menghapus semua pesan.');
+                    });
+            }
+        });
+
+        // ============================================================
+        // 6. CONTEXT MENU (untuk pesan)
         // ============================================================
         let currentMessageKey = null;
         let currentMessageElement = null;
@@ -769,7 +889,7 @@
         });
 
         // ============================================================
-        // 6. RENDER PESAN
+        // 7. RENDER PESAN
         // ============================================================
         function renderMessage(key, data, isOwn) {
             if (emptyState.style.display !== 'none') {
@@ -833,7 +953,7 @@
         }
 
         // ============================================================
-        // 7. UPDATE CENTANG
+        // 8. UPDATE CENTANG
         // ============================================================
         function updateCheckMark(key, read) {
             const msgDiv = container.querySelector(`[data-key="${key}"]`);
@@ -845,7 +965,7 @@
         }
 
         // ============================================================
-        // 8. LISTENER REALTIME
+        // 9. LISTENER REALTIME
         // ============================================================
         let isInitialLoad = true;
         const notifiedKeys = new Set();
@@ -858,9 +978,8 @@
 
             renderMessage(key, data, isOwn);
 
-            // Jika pesan dari orang lain dan belum dibaca, mainkan suara siulan
             if (!isOwn && data.read !== true && !notifiedKeys.has(key)) {
-                playIncomingSound(); // <-- suara siulan
+                playIncomingSound();
                 notifiedKeys.add(key);
                 messagesRef.child(key).update({ read: true })
                     .catch(err => console.warn('Gagal update read:', err));
@@ -893,7 +1012,7 @@
         });
 
         // ============================================================
-        // 9. KIRIM PESAN (dengan suara terkirim)
+        // 10. KIRIM PESAN
         // ============================================================
         function sendMessage() {
             const text = messageInput.value.trim();
@@ -915,14 +1034,11 @@
 
             newRef.set(payload)
                 .then(() => {
-                    // Suara pesan terkirim
                     playOutgoingSound();
-
                     setTimeout(() => {
                         newRef.update({ read: true })
                             .catch(err => console.warn('Gagal update read:', err));
                     }, 1000);
-
                     messageInput.value = '';
                     messageInput.focus();
                     emojiPickerContainer.classList.remove('show');
@@ -934,7 +1050,7 @@
         }
 
         // ============================================================
-        // 10. EMOJI PICKER
+        // 11. EMOJI PICKER
         // ============================================================
         let isEmojiPickerVisible = false;
 
@@ -966,7 +1082,7 @@
         });
 
         // ============================================================
-        // 11. EVENT LISTENERS
+        // 12. EVENT LISTENERS
         // ============================================================
         sendBtn.addEventListener('click', sendMessage);
 
@@ -985,7 +1101,7 @@
         });
 
         // ============================================================
-        // 12. INISIALISASI
+        // 13. INISIALISASI
         // ============================================================
         const savedName = sessionStorage.getItem('chat_user');
         if (savedName) {
@@ -1003,7 +1119,7 @@
         });
         observer.observe(container, { childList: true, subtree: true });
 
-        console.log('💬 WA + Suara Siulan siap!');
+        console.log('💬 WA + Hapus Semua Chat siap!');
     </script>
 
 </body>
