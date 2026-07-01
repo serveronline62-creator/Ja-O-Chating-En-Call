@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>💬 Chat Hijau + Emoji</title>
+    <title>💬 WA Clone + Notifikasi</title>
 
-    <!-- Firebase SDK (compat v9) -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js">
     </script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js">
     </script>
 
-    <!-- Emoji Picker (ringan) -->
+    <!-- Emoji Picker -->
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.18.2/index.js">
     </script>
 
@@ -22,7 +22,6 @@
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
             font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
             background: #e5ddd5;
@@ -32,10 +31,7 @@
             min-height: 100vh;
             margin: 0;
             padding: 0;
-            /* hilangkan padding agar full di HP */
         }
-
-        /* ----- CHAT CONTAINER ----- */
         .chat-container {
             width: 100%;
             max-width: 520px;
@@ -45,13 +41,10 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
-            /* full height di HP */
             max-height: 100vh;
             border: none;
             border-radius: 0;
-            /* flat di HP, biar full */
         }
-
         @media (min-width: 600px) {
             .chat-container {
                 height: 90vh;
@@ -62,49 +55,54 @@
             }
         }
 
-        /* ----- HEADER (hijau WhatsApp) ----- */
+        /* ----- HEADER (hijau WA) ----- */
         .chat-header {
             background: #00a884;
-            padding: 14px 20px;
+            padding: 12px 16px;
             display: flex;
             align-items: center;
             gap: 12px;
             flex-shrink: 0;
             border-bottom: 1px solid rgba(0, 0, 0, 0.06);
         }
-
-        .chat-header .logo {
-            font-size: 26px;
-            line-height: 1;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-        }
-
-        .chat-header h1 {
-            color: #ffffff;
-            font-size: 20px;
-            font-weight: 600;
-            letter-spacing: 0.2px;
-        }
-
-        .chat-header .status {
-            margin-left: auto;
-            color: #d9fdd3;
-            font-size: 13px;
+        .chat-header .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #ffffff;
             display: flex;
             align-items: center;
-            gap: 6px;
+            justify-content: center;
+            font-size: 22px;
+            color: #00a884;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
-
-        .chat-header .status::before {
+        .chat-header .info {
+            flex: 1;
+            color: #fff;
+        }
+        .chat-header .info h1 {
+            font-size: 18px;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+        .chat-header .info .status {
+            font-size: 13px;
+            color: #d9fdd3;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .chat-header .info .status::before {
             content: '';
             display: inline-block;
-            width: 9px;
-            height: 9px;
+            width: 8px;
+            height: 8px;
             background: #25d366;
             border-radius: 50%;
             animation: pulse-dot 1.8s ease-in-out infinite;
         }
-
         @keyframes pulse-dot {
             0%,
             100% {
@@ -116,8 +114,18 @@
                 transform: scale(0.8);
             }
         }
+        .chat-header .actions {
+            display: flex;
+            gap: 16px;
+            color: #fff;
+            font-size: 20px;
+        }
+        .chat-header .actions span {
+            cursor: default;
+            opacity: 0.9;
+        }
 
-        /* ----- MESSAGE AREA (background WA) ----- */
+        /* ----- MESSAGE AREA ----- */
         .messages-wrapper {
             flex: 1;
             overflow-y: auto;
@@ -131,15 +139,12 @@
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
         }
-
         .messages-wrapper::-webkit-scrollbar {
             width: 5px;
         }
-
         .messages-wrapper::-webkit-scrollbar-track {
             background: transparent;
         }
-
         .messages-wrapper::-webkit-scrollbar-thumb {
             background: #b0a89e;
             border-radius: 10px;
@@ -152,17 +157,14 @@
             max-width: 82%;
             animation: fade-in 0.2s ease;
         }
-
         .message.own {
             align-self: flex-end;
             align-items: flex-end;
         }
-
         .message.other {
             align-self: flex-start;
             align-items: flex-start;
         }
-
         @keyframes fade-in {
             0% {
                 opacity: 0;
@@ -173,7 +175,6 @@
                 transform: translateY(0);
             }
         }
-
         .message .bubble {
             padding: 9px 14px;
             border-radius: 16px;
@@ -183,19 +184,16 @@
             position: relative;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
         }
-
         .message.own .bubble {
             background: #dcf8c6;
             color: #1a1a1a;
             border-bottom-right-radius: 4px;
         }
-
         .message.other .bubble {
             background: #ffffff;
             color: #1a1a1a;
             border-bottom-left-radius: 4px;
         }
-
         .message .sender {
             font-size: 12px;
             font-weight: 600;
@@ -204,23 +202,32 @@
             color: #4a4a4a;
             letter-spacing: 0.2px;
         }
-
         .message.own .sender {
             color: #0a6b4a;
             text-align: right;
             padding-right: 4px;
         }
-
+        .message .footer {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 3px;
+            padding: 0 4px;
+        }
         .message .time {
             font-size: 10px;
             color: #7a7a7a;
-            margin-top: 3px;
-            padding: 0 4px;
-            letter-spacing: 0.2px;
         }
-
         .message.own .time {
             text-align: right;
+        }
+        .message .check {
+            font-size: 12px;
+            color: #4fc3f7;
+            line-height: 1;
+        }
+        .message.other .check {
+            display: none;
         }
 
         /* ----- EMPTY STATE ----- */
@@ -234,23 +241,20 @@
             text-align: center;
             gap: 6px;
         }
-
         .empty-state .icon {
             font-size: 56px;
             opacity: 0.5;
         }
-
         .empty-state p {
             font-size: 16px;
             font-weight: 400;
         }
-
         .empty-state .sub {
             font-size: 13px;
             color: #999;
         }
 
-        /* ----- INPUT AREA (dengan emoji button) ----- */
+        /* ----- INPUT AREA ----- */
         .input-area {
             padding: 8px 12px 12px;
             background: #f0f0f0;
@@ -260,14 +264,35 @@
             flex-direction: column;
             gap: 6px;
         }
-
         .input-row {
             display: flex;
             gap: 6px;
             align-items: center;
             flex-wrap: nowrap;
         }
-
+        .input-row .icon-btn {
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px;
+            line-height: 1;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            flex-shrink: 0;
+            color: #54656f;
+        }
+        .input-row .icon-btn:hover {
+            background: rgba(0, 0, 0, 0.06);
+        }
+        .input-row .icon-btn:active {
+            transform: scale(0.9);
+        }
         .input-row input[type="text"] {
             flex: 1;
             padding: 10px 14px;
@@ -281,47 +306,17 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
             min-width: 0;
         }
-
         .input-row input[type="text"]::placeholder {
             color: #a0a0a0;
         }
-
         .input-row input[type="text"]:focus {
             box-shadow: 0 0 0 2px #00a884;
         }
-
         .input-row input[type="text"].name-input {
             flex: 0 0 100px;
             font-weight: 500;
             background: #f8f8f8;
         }
-
-        /* Tombol emoji */
-        .emoji-btn {
-            background: transparent;
-            border: none;
-            font-size: 28px;
-            cursor: pointer;
-            padding: 4px 6px;
-            line-height: 1;
-            border-radius: 50%;
-            transition: background 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 44px;
-            height: 44px;
-            flex-shrink: 0;
-        }
-
-        .emoji-btn:hover {
-            background: rgba(0, 0, 0, 0.06);
-        }
-
-        .emoji-btn:active {
-            transform: scale(0.9);
-        }
-
         .input-row button.send-btn {
             padding: 10px 18px;
             border: none;
@@ -339,22 +334,13 @@
             box-shadow: 0 2px 8px rgba(0, 168, 132, 0.3);
             flex-shrink: 0;
         }
-
         .input-row button.send-btn:hover {
             background: #008f72;
             transform: scale(1.02);
             box-shadow: 0 4px 16px rgba(0, 168, 132, 0.4);
         }
-
         .input-row button.send-btn:active {
             transform: scale(0.97);
-        }
-
-        .input-row button.send-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
         }
 
         /* Emoji picker container */
@@ -362,15 +348,12 @@
             position: relative;
             width: 100%;
             display: none;
-            /* disembunyikan default */
             justify-content: flex-end;
             margin-top: 4px;
         }
-
         .emoji-picker-container.show {
             display: flex;
         }
-
         emoji-picker {
             width: 100%;
             max-width: 350px;
@@ -383,8 +366,13 @@
 
         /* Responsive */
         @media (max-width: 480px) {
-            .chat-header h1 {
-                font-size: 17px;
+            .chat-header .info h1 {
+                font-size: 16px;
+            }
+            .chat-header .avatar {
+                width: 36px;
+                height: 36px;
+                font-size: 18px;
             }
             .message .bubble {
                 font-size: 14px;
@@ -399,10 +387,10 @@
                 font-size: 14px;
                 padding: 8px 12px;
             }
-            .emoji-btn {
-                width: 40px;
-                height: 40px;
-                font-size: 24px;
+            .input-row .icon-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 20px;
             }
             .input-row button.send-btn {
                 padding: 8px 14px;
@@ -412,7 +400,6 @@
                 height: 240px;
             }
         }
-
         @media (max-width: 380px) {
             .input-row {
                 flex-wrap: wrap;
@@ -427,8 +414,8 @@
                 flex: 1;
                 justify-content: center;
             }
-            .emoji-btn {
-                flex: 0 0 40px;
+            .input-row .icon-btn {
+                flex: 0 0 36px;
             }
         }
     </style>
@@ -437,11 +424,17 @@
 
     <div class="chat-container">
 
-        <!-- HEADER HIJAU -->
+        <!-- HEADER -->
         <div class="chat-header">
-            <span class="logo">💬</span>
-            <h1>Chat Hijau</h1>
-            <span class="status">Online</span>
+            <div class="avatar">💬</div>
+            <div class="info">
+                <h1>Chat Hijau</h1>
+                <div class="status">Online</div>
+            </div>
+            <div class="actions">
+                <span>📷</span>
+                <span>📞</span>
+            </div>
         </div>
 
         <!-- MESSAGES -->
@@ -453,37 +446,21 @@
             </div>
         </div>
 
-        <!-- INPUT AREA -->
+        <!-- INPUT -->
         <div class="input-area">
             <div class="input-row">
-                <input
-                type="text"
-                class="name-input"
-                id="nameInput"
-                placeholder="Nama"
-                maxlength="20"
-                value="User"
-                />
-                <input
-                type="text"
-                class="msg-input"
-                id="messageInput"
-                placeholder="Ketik pesan..."
-                maxlength="500"
-                autocomplete="off"
-                />
-                <button class="emoji-btn" id="emojiToggle" type="button" aria-label="Emoji">😊</button>
+                <input type="text" class="name-input" id="nameInput" placeholder="Nama" maxlength="20" value="User" />
+                <input type="text" class="msg-input" id="messageInput" placeholder="Ketik pesan..." maxlength="500" autocomplete="off" />
+                <button class="icon-btn" id="emojiToggle" type="button" aria-label="Emoji">😊</button>
                 <button class="send-btn" id="sendBtn">
                     <span>Kirim</span>
                     <span style="font-size:18px;">➤</span>
                 </button>
             </div>
-            <!-- Tempat emoji picker -->
             <div class="emoji-picker-container" id="emojiPickerContainer">
                 <emoji-picker id="emojiPicker"></emoji-picker>
             </div>
         </div>
-
     </div>
 
     <script>
@@ -517,7 +494,37 @@
         const emojiPicker = document.getElementById('emojiPicker');
 
         // ============================================================
-        // 3. FUNGSI BANTU
+        // 3. NOTIFIKASI SUARA (Web Audio)
+        // ============================================================
+        let audioCtx = null;
+
+        function playNotificationSound() {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.frequency.value = 800;
+                osc.type = 'sine';
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.15);
+            } catch (e) {
+                // Fallback: gunakan Audio tag jika tersedia
+                try {
+                    const audio = new Audio('data:audio/wav;base64,UklGRlQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAABCAAAAAAA=');
+                    audio.volume = 0.5;
+                    audio.play().catch(() => {});
+                } catch (e2) {}
+            }
+        }
+
+        // ============================================================
+        // 4. FUNGSI BANTU
         // ============================================================
         function formatTime(timestamp) {
             if (!timestamp) return '--:--';
@@ -540,9 +547,9 @@
         }
 
         // ============================================================
-        // 4. RENDER SATU PESAN
+        // 5. RENDER PESAN (dengan centang)
         // ============================================================
-        function renderMessage(key, data) {
+        function renderMessage(key, data, isOwn) {
             if (emptyState.style.display !== 'none') {
                 emptyState.style.display = 'none';
             }
@@ -550,12 +557,10 @@
             const sender = data.name || 'Anonim';
             const text = data.text || '';
             const time = data.timestamp || Date.now();
+            const read = data.read === true;
 
             const existing = container.querySelector(`[data-key="${key}"]`);
             if (existing) return;
-
-            const currentUser = sessionStorage.getItem('chat_user') || getSenderName();
-            const isOwn = (sender === currentUser);
 
             const msgDiv = document.createElement('div');
             msgDiv.className = `message ${isOwn ? 'own' : 'other'}`;
@@ -569,34 +574,86 @@
             bubble.className = 'bubble';
             bubble.textContent = text;
 
-            const timeSpan = document.createElement('div');
+            const footer = document.createElement('div');
+            footer.className = 'footer';
+
+            const timeSpan = document.createElement('span');
             timeSpan.className = 'time';
             timeSpan.textContent = formatTime(time);
 
+            const checkSpan = document.createElement('span');
+            checkSpan.className = 'check';
+            checkSpan.textContent = read ? '✓✓' : '✓';
+
+            footer.appendChild(timeSpan);
+            if (isOwn) {
+                footer.appendChild(checkSpan);
+            }
+
             msgDiv.appendChild(senderSpan);
             msgDiv.appendChild(bubble);
-            msgDiv.appendChild(timeSpan);
+            msgDiv.appendChild(footer);
 
             container.appendChild(msgDiv);
             scrollToBottom();
         }
 
         // ============================================================
-        // 5. LISTENER REALTIME (child_added)
+        // 6. UPDATE CENTANG SAAT READ BERUBAH
+        // ============================================================
+        function updateCheckMark(key, read) {
+            const msgDiv = container.querySelector(`[data-key="${key}"]`);
+            if (!msgDiv) return;
+            const checkSpan = msgDiv.querySelector('.check');
+            if (checkSpan) {
+                checkSpan.textContent = read ? '✓✓' : '✓';
+            }
+        }
+
+        // ============================================================
+        // 7. LISTENER REALTIME (child_added & child_changed)
         // ============================================================
         let isInitialLoad = true;
+
+        // Untuk melacak pesan yang sudah diproses notifikasi
+        const notifiedKeys = new Set();
 
         messagesRef.orderByChild('timestamp').limitToLast(100).on('child_added', (snapshot) => {
             const key = snapshot.key;
             const data = snapshot.val();
-            renderMessage(key, data);
+            const currentUser = sessionStorage.getItem('chat_user') || getSenderName();
+            const isOwn = (data.name === currentUser);
+
+            // Render pesan
+            renderMessage(key, data, isOwn);
+
+            // Jika pesan dari orang lain dan belum dibaca, mainkan notifikasi dan tandai read
+            if (!isOwn && data.read !== true && !notifiedKeys.has(key)) {
+                // Mainkan suara
+                playNotificationSound();
+                notifiedKeys.add(key);
+
+                // Update read menjadi true di Firebase
+                messagesRef.child(key).update({ read: true })
+                    .catch(err => console.warn('Gagal update read:', err));
+            }
+
             if (isInitialLoad) {
                 isInitialLoad = false;
             }
         });
 
+        // Dengarkan perubahan read
+        messagesRef.on('child_changed', (snapshot) => {
+            const key = snapshot.key;
+            const data = snapshot.val();
+            if (data.read !== undefined) {
+                updateCheckMark(key, data.read);
+            }
+        });
+
         // ============================================================
-        // 6. KIRIM PESAN
+        // 8. KIRIM PESAN
         // ============================================================
         function sendMessage() {
             const text = messageInput.value.trim();
@@ -608,17 +665,24 @@
             const name = getSenderName();
             sessionStorage.setItem('chat_user', name);
 
+            const newRef = messagesRef.push();
+            const key = newRef.key;
             const payload = {
                 name: name,
                 text: text,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                read: false // awal belum dibaca
             };
 
-            messagesRef.push(payload)
+            newRef.set(payload)
                 .then(() => {
+                    // Setelah berhasil disimpan, update read menjadi true setelah 1 detik (simulasi dibaca)
+                    setTimeout(() => {
+                        newRef.update({ read: true })
+                            .catch(err => console.warn('Gagal update read:', err));
+                    }, 1000);
                     messageInput.value = '';
                     messageInput.focus();
-                    // Sembunyikan emoji picker setelah kirim
                     emojiPickerContainer.classList.remove('show');
                 })
                 .catch((err) => {
@@ -628,7 +692,7 @@
         }
 
         // ============================================================
-        // 7. EMOJI PICKER
+        // 9. EMOJI PICKER
         // ============================================================
         let isEmojiPickerVisible = false;
 
@@ -636,31 +700,22 @@
             e.stopPropagation();
             isEmojiPickerVisible = !isEmojiPickerVisible;
             emojiPickerContainer.classList.toggle('show', isEmojiPickerVisible);
-            if (isEmojiPickerVisible) {
-                // Fokus ke input tidak diperlukan, biarkan picker terbuka
-            }
         });
 
-        // Saat emoji dipilih
         emojiPicker.addEventListener('emoji-click', (event) => {
             const emoji = event.detail.unicode;
-            // Sisipkan di posisi kursor di input
             const start = messageInput.selectionStart;
             const end = messageInput.selectionEnd;
             const text = messageInput.value;
             messageInput.value = text.substring(0, start) + emoji + text.substring(end);
-            // Pindahkan kursor setelah emoji
             const newPos = start + emoji.length;
             messageInput.setSelectionRange(newPos, newPos);
             messageInput.focus();
-            // Tutup picker (opsional, biarkan terbuka agar bisa pilih banyak)
-            // Kita biarkan terbuka, user bisa klik lagi untuk tutup
         });
 
-        // Tutup picker jika klik di luar
         document.addEventListener('click', (e) => {
             const target = e.target;
-            if (!target.closest('.emoji-picker-container') && !target.closest('.emoji-btn')) {
+            if (!target.closest('.emoji-picker-container') && !target.closest('.icon-btn')) {
                 if (emojiPickerContainer.classList.contains('show')) {
                     emojiPickerContainer.classList.remove('show');
                     isEmojiPickerVisible = false;
@@ -669,7 +724,7 @@
         });
 
         // ============================================================
-        // 8. EVENT LISTENERS
+        // 10. EVENT LISTENERS
         // ============================================================
         sendBtn.addEventListener('click', sendMessage);
 
@@ -688,7 +743,7 @@
         });
 
         // ============================================================
-        // 9. INISIALISASI
+        // 11. INISIALISASI
         // ============================================================
         const savedName = sessionStorage.getItem('chat_user');
         if (savedName) {
@@ -706,7 +761,7 @@
         });
         observer.observe(container, { childList: true, subtree: true });
 
-        console.log('💬 Chat Hijau + Emoji siap! (Firebase)');
+        console.log('💬 WA Clone + Notifikasi & Centang siap!');
     </script>
 
 </body>
