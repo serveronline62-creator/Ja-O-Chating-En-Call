@@ -10,6 +10,8 @@
     </script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js">
     </script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js">
+    </script>
 
     <!-- Emoji Picker -->
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.18.2/index.js">
@@ -35,13 +37,172 @@
             margin: 0;
             padding: 0;
         }
-        .chat-container {
+
+        /* ================================================================
+           LOGIN PAGE
+           ================================================================ */
+        .login-page {
+            width: 100%;
+            max-width: 420px;
+            background: #ffffff;
+            border-radius: 28px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 16px;
+            transition: all 0.3s ease;
+        }
+        .login-page.hidden {
+            display: none;
+        }
+        .login-page .logo {
+            font-size: 48px;
+            color: #00a884;
+            margin-bottom: 8px;
+        }
+        .login-page h1 {
+            font-size: 24px;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+        }
+        .login-page .subtitle {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        .login-page .form-group {
+            width: 100%;
+            margin-bottom: 16px;
+        }
+        .login-page .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .login-page .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 15px;
+            transition: border-color 0.2s;
+            outline: none;
+            background: #fafafa;
+        }
+        .login-page .form-group input:focus {
+            border-color: #00a884;
+            background: #fff;
+        }
+        .login-page .form-group input.error {
+            border-color: #e74c3c;
+            background: #fff5f5;
+        }
+        .login-page .btn-primary {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: #00a884;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .login-page .btn-primary:hover {
+            background: #008f72;
+            transform: scale(1.01);
+        }
+        .login-page .btn-primary:active {
+            transform: scale(0.98);
+        }
+        .login-page .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .login-page .auth-toggle {
+            margin-top: 16px;
+            font-size: 14px;
+            color: #666;
+        }
+        .login-page .auth-toggle a {
+            color: #00a884;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .login-page .auth-toggle a:hover {
+            text-decoration: underline;
+        }
+        .login-page .error-msg {
+            color: #e74c3c;
+            font-size: 13px;
+            margin-top: 8px;
+            text-align: center;
+            min-height: 20px;
+        }
+        .login-page .success-msg {
+            color: #27ae60;
+            font-size: 13px;
+            margin-top: 8px;
+            text-align: center;
+            min-height: 20px;
+        }
+        .login-page .divider {
+            width: 100%;
+            height: 1px;
+            background: #e8e8e8;
+            margin: 16px 0;
+        }
+        .login-page .guest-btn {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: transparent;
+            color: #555;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .login-page .guest-btn:hover {
+            background: #f5f5f5;
+        }
+        .login-page .password-wrapper {
+            position: relative;
+        }
+        .login-page .password-wrapper .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px;
+        }
+        .login-page .password-wrapper .toggle-password:hover {
+            color: #555;
+        }
+
+        /* ================================================================
+           CHAT APP
+           ================================================================ */
+        .chat-app {
             width: 100%;
             max-width: 520px;
             background: #ffffff;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
             overflow: hidden;
-            display: flex;
+            display: none;
             flex-direction: column;
             height: 100vh;
             max-height: 100vh;
@@ -49,8 +210,11 @@
             border-radius: 0;
             position: relative;
         }
+        .chat-app.show {
+            display: flex;
+        }
         @media (min-width: 600px) {
-            .chat-container {
+            .chat-app {
                 height: 90vh;
                 max-height: 700px;
                 border-radius: 28px;
@@ -59,55 +223,71 @@
             }
         }
 
-        /* ----- HEADER ----- */
+        /* ================================================================
+           HEADER YANG RESPONSIF
+           ================================================================ */
         .chat-header {
             background: #00a884;
-            padding: 12px 16px;
+            padding: 10px 12px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
             flex-shrink: 0;
             border-bottom: 1px solid rgba(0, 0, 0, 0.06);
             position: relative;
             z-index: 10;
+            min-height: 56px;
         }
+
+        /* Avatar */
         .chat-header .avatar {
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
             border-radius: 50%;
             background: #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 16px;
             color: #00a884;
             font-weight: bold;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
         }
+
+        /* Info tengah */
         .chat-header .info {
             flex: 1;
             color: #fff;
+            min-width: 0;
+            overflow: hidden;
         }
         .chat-header .info h1 {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
             line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .chat-header .info .status {
-            font-size: 13px;
+            font-size: 11px;
             color: #d9fdd3;
             display: flex;
             align-items: center;
             gap: 4px;
+            white-space: nowrap;
         }
         .chat-header .info .status::before {
             content: '';
             display: inline-block;
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             background: #25d366;
             border-radius: 50%;
             animation: pulse-dot 1.8s ease-in-out infinite;
+            flex-shrink: 0;
         }
         @keyframes pulse-dot {
             0%,
@@ -120,26 +300,77 @@
                 transform: scale(0.8);
             }
         }
-        .chat-header .actions {
+
+        /* User info (email + logout) */
+        .chat-header .user-info {
             display: flex;
+            align-items: center;
             gap: 6px;
             color: #fff;
+            font-size: 12px;
+            font-weight: 500;
+            flex-shrink: 0;
+            max-width: 140px;
+        }
+        .chat-header .user-info .user-email {
+            opacity: 0.85;
+            font-size: 11px;
+            font-weight: 400;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 80px;
+        }
+        .chat-header .user-info .logout-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: #fff;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 4px 10px;
+            border-radius: 16px;
+            transition: background 0.2s;
+            display: flex;
             align-items: center;
+            gap: 4px;
+            font-weight: 500;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .chat-header .user-info .logout-btn i {
+            font-size: 11px;
+        }
+        .chat-header .user-info .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .chat-header .user-info .logout-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Actions (tombol-tombol) */
+        .chat-header .actions {
+            display: flex;
+            gap: 2px;
+            color: #fff;
+            align-items: center;
+            flex-shrink: 0;
         }
         .chat-header .actions button {
             background: none;
             border: none;
             color: #fff;
-            font-size: 20px;
+            font-size: 17px;
             cursor: pointer;
-            padding: 6px;
+            padding: 4px;
             border-radius: 50%;
             transition: background 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 40px;
-            height: 40px;
+            width: 34px;
+            height: 34px;
+            min-width: 34px;
+            flex-shrink: 0;
         }
         .chat-header .actions button:hover {
             background: rgba(255, 255, 255, 0.2);
@@ -148,7 +379,7 @@
             transform: scale(0.9);
         }
         .chat-header .actions .menu-dots {
-            font-size: 24px;
+            font-size: 18px;
             line-height: 1;
             cursor: pointer;
             padding: 4px 6px;
@@ -156,17 +387,232 @@
             opacity: 0.9;
             transition: opacity 0.2s;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 34px;
+            height: 34px;
+            min-width: 34px;
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
         }
         .chat-header .actions .menu-dots:hover {
             opacity: 1;
             background: rgba(255, 255, 255, 0.2);
         }
 
+        /* ================================================================
+           RESPONSIVE HEADER - LAYAR KECIL
+           ================================================================ */
+        @media (max-width: 480px) {
+            .chat-header {
+                padding: 8px 10px;
+                min-height: 50px;
+                gap: 6px;
+            }
+            .chat-header .avatar {
+                width: 30px;
+                height: 30px;
+                min-width: 30px;
+                font-size: 14px;
+            }
+            .chat-header .info h1 {
+                font-size: 14px;
+            }
+            .chat-header .info .status {
+                font-size: 10px;
+            }
+            .chat-header .info .status::before {
+                width: 5px;
+                height: 5px;
+            }
+            .chat-header .user-info {
+                max-width: 100px;
+                gap: 4px;
+            }
+            .chat-header .user-info .user-email {
+                font-size: 10px;
+                max-width: 60px;
+            }
+            .chat-header .user-info .logout-btn {
+                font-size: 10px;
+                padding: 3px 8px;
+                gap: 3px;
+            }
+            .chat-header .user-info .logout-btn i {
+                font-size: 10px;
+            }
+            .chat-header .actions {
+                gap: 1px;
+            }
+            .chat-header .actions button {
+                width: 30px;
+                height: 30px;
+                min-width: 30px;
+                font-size: 14px;
+                padding: 3px;
+            }
+            .chat-header .actions .menu-dots {
+                width: 30px;
+                height: 30px;
+                min-width: 30px;
+                font-size: 16px;
+                padding: 3px 4px;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .chat-header {
+                padding: 6px 8px;
+                min-height: 44px;
+                gap: 4px;
+            }
+            .chat-header .avatar {
+                width: 26px;
+                height: 26px;
+                min-width: 26px;
+                font-size: 12px;
+            }
+            .chat-header .info h1 {
+                font-size: 12px;
+            }
+            .chat-header .info .status {
+                font-size: 9px;
+            }
+            .chat-header .info .status::before {
+                width: 4px;
+                height: 4px;
+            }
+            .chat-header .user-info {
+                max-width: 80px;
+                gap: 3px;
+            }
+            .chat-header .user-info .user-email {
+                font-size: 9px;
+                max-width: 45px;
+            }
+            .chat-header .user-info .logout-btn {
+                font-size: 9px;
+                padding: 2px 6px;
+                gap: 2px;
+            }
+            .chat-header .user-info .logout-btn i {
+                font-size: 9px;
+            }
+            .chat-header .actions button {
+                width: 26px;
+                height: 26px;
+                min-width: 26px;
+                font-size: 12px;
+                padding: 2px;
+            }
+            .chat-header .actions .menu-dots {
+                width: 26px;
+                height: 26px;
+                min-width: 26px;
+                font-size: 13px;
+                padding: 2px 3px;
+            }
+        }
+
+        /* ================================================================
+           RESPONSIVE UNTUK LAYAR SEDANG (tablet)
+           ================================================================ */
+        @media (min-width: 481px) and (max-width: 600px) {
+            .chat-header {
+                padding: 10px 14px;
+                min-height: 54px;
+            }
+            .chat-header .avatar {
+                width: 34px;
+                height: 34px;
+                min-width: 34px;
+                font-size: 15px;
+            }
+            .chat-header .info h1 {
+                font-size: 15px;
+            }
+            .chat-header .info .status {
+                font-size: 11px;
+            }
+            .chat-header .user-info {
+                max-width: 120px;
+            }
+            .chat-header .user-info .user-email {
+                font-size: 11px;
+                max-width: 70px;
+            }
+            .chat-header .actions button {
+                width: 32px;
+                height: 32px;
+                min-width: 32px;
+                font-size: 15px;
+            }
+            .chat-header .actions .menu-dots {
+                width: 32px;
+                height: 32px;
+                min-width: 32px;
+                font-size: 17px;
+            }
+        }
+
+        /* ================================================================
+           RESPONSIVE UNTUK LAYAR BESAR (desktop)
+           ================================================================ */
+        @media (min-width: 601px) {
+            .chat-header {
+                padding: 12px 18px;
+                min-height: 64px;
+                gap: 12px;
+            }
+            .chat-header .avatar {
+                width: 40px;
+                height: 40px;
+                min-width: 40px;
+                font-size: 18px;
+            }
+            .chat-header .info h1 {
+                font-size: 18px;
+            }
+            .chat-header .info .status {
+                font-size: 13px;
+            }
+            .chat-header .info .status::before {
+                width: 7px;
+                height: 7px;
+            }
+            .chat-header .user-info {
+                max-width: 200px;
+                gap: 8px;
+            }
+            .chat-header .user-info .user-email {
+                font-size: 12px;
+                max-width: 120px;
+            }
+            .chat-header .user-info .logout-btn {
+                font-size: 13px;
+                padding: 5px 14px;
+            }
+            .chat-header .actions {
+                gap: 4px;
+            }
+            .chat-header .actions button {
+                width: 38px;
+                height: 38px;
+                min-width: 38px;
+                font-size: 18px;
+                padding: 5px;
+            }
+            .chat-header .actions .menu-dots {
+                width: 38px;
+                height: 38px;
+                min-width: 38px;
+                font-size: 20px;
+            }
+        }
+
+        /* ================================================================
+           HEADER DROPDOWN
+           ================================================================ */
         .header-dropdown {
             position: absolute;
             right: 12px;
@@ -224,6 +670,23 @@
             height: 1px;
             background: #e8e8e8;
             margin: 4px 12px;
+        }
+
+        @media (max-width: 480px) {
+            .header-dropdown {
+                right: 8px;
+                top: 52px;
+                min-width: 170px;
+            }
+            .header-dropdown .drop-item {
+                padding: 8px 14px;
+                font-size: 13px;
+                gap: 10px;
+            }
+            .header-dropdown .drop-item .icon {
+                font-size: 16px;
+                width: 20px;
+            }
         }
 
         /* ----- MESSAGE AREA ----- */
@@ -1292,26 +1755,8 @@
             background: #fde8e8;
         }
 
-        /* ----- RESPONSIVE ----- */
+        /* ----- RESPONSIVE UMUM ----- */
         @media (max-width: 480px) {
-            .chat-header .info h1 {
-                font-size: 16px;
-            }
-            .chat-header .avatar {
-                width: 36px;
-                height: 36px;
-                font-size: 18px;
-            }
-            .chat-header .actions button {
-                width: 36px;
-                height: 36px;
-                font-size: 17px;
-            }
-            .chat-header .actions .menu-dots {
-                width: 36px;
-                height: 36px;
-                font-size: 20px;
-            }
             .message .bubble {
                 font-size: 14px;
                 padding: 8px 12px;
@@ -1352,15 +1797,6 @@
             }
             .context-menu .divider {
                 margin: 2px 10px;
-            }
-            .header-dropdown {
-                right: 8px;
-                min-width: 160px;
-            }
-            .header-dropdown .drop-item {
-                padding: 8px 14px;
-                font-size: 13px;
-                gap: 10px;
             }
             .reply-indicator {
                 font-size: 12px;
@@ -1435,6 +1871,13 @@
             .call-history-header h2 {
                 font-size: 16px;
             }
+            .login-page {
+                padding: 30px 20px;
+                margin: 12px;
+            }
+            .login-page h1 {
+                font-size: 20px;
+            }
         }
         @media (max-width: 380px) {
             .input-row {
@@ -1463,21 +1906,108 @@
 </head>
 <body>
 
-    <div class="chat-container" id="appContainer">
+    <!-- ================================================================
+    LOGIN PAGE
+    ================================================================ -->
+    <div class="login-page" id="loginPage">
+        <div class="logo"><i class="fas fa-comment-dots"></i></div>
+        <h1>Ja'O Chat</h1>
+        <div class="subtitle">Masuk untuk mulai mengobrol</div>
 
-        <!-- HEADER -->
+        <div class="form-group">
+            <label for="loginEmail">Email</label>
+            <input type="email" id="loginEmail" placeholder="email@contoh.com" />
+        </div>
+        <div class="form-group">
+            <label for="loginPassword">Password</label>
+            <div class="password-wrapper">
+                <input type="password" id="loginPassword" placeholder="••••••••" />
+                <button class="toggle-password" id="toggleLoginPass" type="button">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="loginError" class="error-msg"></div>
+        <div id="loginSuccess" class="success-msg"></div>
+
+        <button class="btn-primary" id="loginBtn">Masuk</button>
+
+        <div class="divider"></div>
+
+        <button class="guest-btn" id="guestBtn">Masuk sebagai Tamu</button>
+
+        <div class="auth-toggle">
+            Belum punya akun? <a id="switchToRegister">Daftar</a>
+        </div>
+    </div>
+
+    <!-- ================================================================
+    REGISTER PAGE
+    ================================================================ -->
+    <div class="login-page" id="registerPage" style="display:none;">
+        <div class="logo"><i class="fas fa-user-plus"></i></div>
+        <h1>Daftar Akun</h1>
+        <div class="subtitle">Buat akun untuk bergabung</div>
+
+        <div class="form-group">
+            <label for="registerEmail">Email</label>
+            <input type="email" id="registerEmail" placeholder="email@contoh.com" />
+        </div>
+        <div class="form-group">
+            <label for="registerPassword">Password</label>
+            <div class="password-wrapper">
+                <input type="password" id="registerPassword" placeholder="Minimal 6 karakter" />
+                <button class="toggle-password" id="toggleRegisterPass" type="button">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="registerName">Nama Panggilan</label>
+            <input type="text" id="registerName" placeholder="Nama Anda" maxlength="20" />
+        </div>
+
+        <div id="registerError" class="error-msg"></div>
+        <div id="registerSuccess" class="success-msg"></div>
+
+        <button class="btn-primary" id="registerBtn">Daftar</button>
+
+        <div class="auth-toggle" style="margin-top:16px;">
+            Sudah punya akun? <a id="switchToLogin">Masuk</a>
+        </div>
+    </div>
+
+    <!-- ================================================================
+    CHAT APP
+    ================================================================ -->
+    <div class="chat-app" id="chatApp">
+        <!-- HEADER YANG RESPONSIF -->
         <div class="chat-header">
+            <!-- Avatar -->
             <div class="avatar"><i class="fas fa-comment-dots"></i></div>
+            
+            <!-- Info tengah -->
             <div class="info">
                 <h1>Ja'O Chat</h1>
                 <div class="status"><span>Online</span></div>
             </div>
+            
+            <!-- User info & logout -->
+            <div class="user-info">
+                <span class="user-email" id="userEmailDisplay">user@email.com</span>
+                <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Keluar</button>
+            </div>
+            
+            <!-- Actions -->
             <div class="actions">
                 <button id="voiceCallBtn" title="Panggilan Suara"><i class="fas fa-phone"></i></button>
                 <button id="videoCallBtn" title="Panggilan Video"><i class="fas fa-video"></i></button>
                 <button id="historyCallBtn" title="Riwayat Panggilan"><i class="fas fa-history"></i></button>
                 <span class="menu-dots" id="headerMenuBtn"><i class="fas fa-ellipsis-v"></i></span>
             </div>
+            
+            <!-- Dropdown -->
             <div class="header-dropdown" id="headerDropdown">
                 <button class="drop-item danger" id="clearAllChat">
                     <span class="icon"><i class="fas fa-trash-alt"></i></span> Hapus Semua Chat
@@ -1531,7 +2061,7 @@
         </div>
 
         <!-- ============================================================= -->
-        <!-- CALL OVERLAY (Tampilan saat sedang telepon/video call)        -->
+        <!-- CALL OVERLAY -->
         <!-- ============================================================= -->
         <div class="call-overlay" id="callOverlay">
             <div class="call-info">
@@ -1551,7 +2081,7 @@
         </div>
 
         <!-- ============================================================= -->
-        <!-- INCOMING CALL POPUP (Notifikasi panggilan masuk)              -->
+        <!-- INCOMING CALL POPUP -->
         <!-- ============================================================= -->
         <div class="incoming-call" id="incomingCallPopup">
             <div class="inc-caller" id="incCallerName">User</div>
@@ -1563,7 +2093,7 @@
         </div>
 
         <!-- ============================================================= -->
-        <!-- CALL HISTORY PANEL (Slide-in dari kanan)                      -->
+        <!-- CALL HISTORY PANEL -->
         <!-- ============================================================= -->
         <div class="call-history-overlay" id="callHistoryOverlay">
             <div class="call-history-panel">
@@ -1583,7 +2113,6 @@
                 </div>
             </div>
         </div>
-
     </div>
 
     <!-- Context Menu -->
@@ -1621,6 +2150,7 @@
 
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        const auth = firebase.auth();
         const messagesRef = database.ref('messages');
         const callsRef = database.ref('calls');
         const callHistoryRef = database.ref('callHistory');
@@ -1643,6 +2173,31 @@
         // ============================================================
         // 4. DOM ELEMEN
         // ============================================================
+        // Login
+        const loginPage = document.getElementById('loginPage');
+        const registerPage = document.getElementById('registerPage');
+        const loginEmail = document.getElementById('loginEmail');
+        const loginPassword = document.getElementById('loginPassword');
+        const loginBtn = document.getElementById('loginBtn');
+        const loginError = document.getElementById('loginError');
+        const loginSuccess = document.getElementById('loginSuccess');
+        const switchToRegister = document.getElementById('switchToRegister');
+        const switchToLogin = document.getElementById('switchToLogin');
+        const registerEmail = document.getElementById('registerEmail');
+        const registerPassword = document.getElementById('registerPassword');
+        const registerName = document.getElementById('registerName');
+        const registerBtn = document.getElementById('registerBtn');
+        const registerError = document.getElementById('registerError');
+        const registerSuccess = document.getElementById('registerSuccess');
+        const guestBtn = document.getElementById('guestBtn');
+        const toggleLoginPass = document.getElementById('toggleLoginPass');
+        const toggleRegisterPass = document.getElementById('toggleRegisterPass');
+
+        // Chat App
+        const chatApp = document.getElementById('chatApp');
+        const userEmailDisplay = document.getElementById('userEmailDisplay');
+        const logoutBtn = document.getElementById('logoutBtn');
+
         const container = document.getElementById('messageContainer');
         const emptyState = document.getElementById('emptyState');
         const nameInput = document.getElementById('nameInput');
@@ -1710,7 +2265,7 @@
         let isMuted = false;
         let isVideoOff = false;
         let incomingCallId = null;
-        let currentFacingMode = 'user'; // 'user' atau 'environment'
+        let currentFacingMode = 'user';
 
         // ============================================================
         // 6. CALL HISTORY TRACKING
@@ -1720,7 +2275,261 @@
         let callConnectedTime = 0;
 
         // ============================================================
-        // 7. SUARA (Chat + Ringtone)
+        // 7. AUTH STATE MANAGEMENT
+        // ============================================================
+        let currentUser = null;
+
+        function showLoginPage() {
+            loginPage.style.display = 'flex';
+            registerPage.style.display = 'none';
+            chatApp.classList.remove('show');
+            chatApp.style.display = 'none';
+        }
+
+        function showRegisterPage() {
+            loginPage.style.display = 'none';
+            registerPage.style.display = 'flex';
+            chatApp.classList.remove('show');
+            chatApp.style.display = 'none';
+        }
+
+        function showChatApp(user) {
+            loginPage.style.display = 'none';
+            registerPage.style.display = 'none';
+            chatApp.style.display = 'flex';
+            chatApp.classList.add('show');
+            currentUser = user;
+            userEmailDisplay.textContent = user.email || 'user@email.com';
+
+            const displayName = user.displayName || user.email.split('@')[0] || 'User';
+            nameInput.value = displayName;
+            sessionStorage.setItem('chat_user', displayName);
+
+            loginError.textContent = '';
+            loginSuccess.textContent = '';
+            registerError.textContent = '';
+            registerSuccess.textContent = '';
+
+            initChatListeners();
+            listenForIncomingCalls();
+        }
+
+        // ============================================================
+        // 8. AUTH FUNCTIONS
+        // ============================================================
+        function clearErrors() {
+            loginError.textContent = '';
+            loginSuccess.textContent = '';
+            registerError.textContent = '';
+            registerSuccess.textContent = '';
+            document.querySelectorAll('.form-group input').forEach(el => el.classList.remove('error'));
+        }
+
+        async function handleLogin() {
+            clearErrors();
+            const email = loginEmail.value.trim();
+            const password = loginPassword.value;
+
+            if (!email || !password) {
+                loginError.textContent = 'Harap isi email dan password.';
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Memproses...';
+
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                loginSuccess.textContent = '✅ Login berhasil!';
+                showChatApp(userCredential.user);
+            } catch (error) {
+                console.error('Login error:', error);
+                let msg = 'Login gagal. ';
+                switch (error.code) {
+                    case 'auth/user-not-found':
+                        msg += 'Email tidak terdaftar.';
+                        break;
+                    case 'auth/wrong-password':
+                        msg += 'Password salah.';
+                        break;
+                    case 'auth/invalid-email':
+                        msg += 'Email tidak valid.';
+                        break;
+                    case 'auth/user-disabled':
+                        msg += 'Akun dinonaktifkan.';
+                        break;
+                    default:
+                        msg += error.message;
+                }
+                loginError.textContent = msg;
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Masuk';
+            }
+        }
+
+        async function handleRegister() {
+            clearErrors();
+            const email = registerEmail.value.trim();
+            const password = registerPassword.value;
+            const name = registerName.value.trim() || email.split('@')[0] || 'User';
+
+            if (!email || !password) {
+                registerError.textContent = 'Harap isi email dan password.';
+                return;
+            }
+
+            if (password.length < 6) {
+                registerError.textContent = 'Password minimal 6 karakter.';
+                return;
+            }
+
+            registerBtn.disabled = true;
+            registerBtn.textContent = 'Memproses...';
+
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                await userCredential.user.updateProfile({
+                    displayName: name
+                });
+                registerSuccess.textContent = '✅ Pendaftaran berhasil!';
+                showChatApp(userCredential.user);
+            } catch (error) {
+                console.error('Register error:', error);
+                let msg = 'Pendaftaran gagal. ';
+                switch (error.code) {
+                    case 'auth/email-already-in-use':
+                        msg += 'Email sudah digunakan.';
+                        break;
+                    case 'auth/invalid-email':
+                        msg += 'Email tidak valid.';
+                        break;
+                    case 'auth/weak-password':
+                        msg += 'Password terlalu lemah.';
+                        break;
+                    default:
+                        msg += error.message;
+                }
+                registerError.textContent = msg;
+            } finally {
+                registerBtn.disabled = false;
+                registerBtn.textContent = 'Daftar';
+            }
+        }
+
+        async function handleGuestLogin() {
+            clearErrors();
+            guestBtn.disabled = true;
+            guestBtn.textContent = 'Memproses...';
+
+            try {
+                const userCredential = await auth.signInAnonymously();
+                const guestName = 'Tamu_' + Math.floor(Math.random() * 10000);
+                await userCredential.user.updateProfile({
+                    displayName: guestName
+                });
+                showChatApp(userCredential.user);
+            } catch (error) {
+                console.error('Guest login error:', error);
+                loginError.textContent = 'Gagal masuk sebagai tamu: ' + error.message;
+            } finally {
+                guestBtn.disabled = false;
+                guestBtn.textContent = 'Masuk sebagai Tamu';
+            }
+        }
+
+        async function handleLogout() {
+            if (!confirm('Keluar dari akun?')) return;
+            try {
+                await auth.signOut();
+                chatApp.classList.remove('show');
+                chatApp.style.display = 'none';
+                showLoginPage();
+                messagesRef.off();
+                callsRef.off();
+                callHistoryRef.off();
+                document.querySelectorAll('.message').forEach(el => el.remove());
+                document.querySelectorAll('.date-separator').forEach(el => el.remove());
+                updateEmptyState();
+                notifiedKeys.clear();
+                lastDisplayedDateKey = null;
+                currentUser = null;
+            } catch (error) {
+                console.error('Logout error:', error);
+                alert('Gagal keluar: ' + error.message);
+            }
+        }
+
+        toggleLoginPass.addEventListener('click', () => {
+            const input = loginPassword;
+            const icon = toggleLoginPass.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fas fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fas fa-eye';
+            }
+        });
+
+        toggleRegisterPass.addEventListener('click', () => {
+            const input = registerPassword;
+            const icon = toggleRegisterPass.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fas fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fas fa-eye';
+            }
+        });
+
+        // ============================================================
+        // 9. EVENT LISTENERS AUTH
+        // ============================================================
+        loginBtn.addEventListener('click', handleLogin);
+        registerBtn.addEventListener('click', handleRegister);
+        guestBtn.addEventListener('click', handleGuestLogin);
+        logoutBtn.addEventListener('click', handleLogout);
+        switchToRegister.addEventListener('click', showRegisterPage);
+        switchToLogin.addEventListener('click', showLoginPage);
+
+        loginPassword.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') handleLogin();
+        });
+        loginEmail.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') handleLogin();
+        });
+        registerPassword.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') handleRegister();
+        });
+        registerEmail.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') handleRegister();
+        });
+        registerName.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') handleRegister();
+        });
+
+        // ============================================================
+        // 10. AUTH STATE OBSERVER
+        // ============================================================
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                if (!currentUser) {
+                    showChatApp(user);
+                }
+            } else {
+                if (currentUser) {
+                    chatApp.classList.remove('show');
+                    chatApp.style.display = 'none';
+                    currentUser = null;
+                }
+                showLoginPage();
+            }
+        });
+
+        // ============================================================
+        // 11. SUARA
         // ============================================================
         let audioCtx = null;
         let ringtoneNodes = null;
@@ -1828,7 +2637,7 @@
         }
 
         // ============================================================
-        // 8. FUNGSI BANTU (Chat)
+        // 12. FUNGSI BANTU (Chat)
         // ============================================================
         function formatTime(timestamp) {
             if (!timestamp) return '--:--';
@@ -1838,7 +2647,7 @@
 
         function getSenderName() {
             const raw = nameInput.value.trim();
-            return raw || 'Anonim';
+            return raw || (currentUser ? currentUser.displayName || 'Anonim' : 'Anonim');
         }
 
         function scrollToBottom() {
@@ -1913,7 +2722,7 @@
         }
 
         // ============================================================
-        // 9. UPLOAD FILE (Chat)
+        // 13. UPLOAD FILE (Chat)
         // ============================================================
         const IMGUR_CLIENT_ID = '546c25a59c58ad7';
 
@@ -1966,7 +2775,7 @@
         }
 
         // ============================================================
-        // 10. HEADER DROPDOWN
+        // 14. HEADER DROPDOWN
         // ============================================================
         headerMenuBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -1993,7 +2802,7 @@
         });
 
         // ============================================================
-        // 11. REPLY (Chat)
+        // 15. REPLY (Chat)
         // ============================================================
         let replyTo = null;
 
@@ -2012,7 +2821,7 @@
         cancelReplyBtn.addEventListener('click', clearReply);
 
         // ============================================================
-        // 12. CONTEXT MENU (Chat)
+        // 16. CONTEXT MENU (Chat)
         // ============================================================
         let currentMessageKey = null;
         let currentMessageElement = null;
@@ -2111,7 +2920,7 @@
         });
 
         // ============================================================
-        // 13. CLEANUP DATE SEPARATORS
+        // 17. CLEANUP DATE SEPARATORS
         // ============================================================
         function cleanupDateSeparators() {
             document.querySelectorAll('.date-separator').forEach(sep => {
@@ -2128,7 +2937,7 @@
         }
 
         // ============================================================
-        // 14. LINK PREVIEW (Chat)
+        // 18. LINK PREVIEW (Chat)
         // ============================================================
         const previewCache = new Map();
 
@@ -2206,7 +3015,7 @@
         }
 
         // ============================================================
-        // 15. RENDER MESSAGE (Chat)
+        // 19. RENDER MESSAGE (Chat)
         // ============================================================
         let lastDisplayedDateKey = null;
 
@@ -2463,47 +3272,53 @@
         }
 
         // ============================================================
-        // 16. LISTENER REALTIME (Chat)
+        // 20. LISTENER REALTIME (Chat)
         // ============================================================
         let isInitialLoad = true;
         const notifiedKeys = new Set();
+        let chatListenersInitialized = false;
 
-        messagesRef.orderByChild('timestamp').limitToLast(100).on('child_added', (snapshot) => {
-            const key = snapshot.key;
-            const data = snapshot.val();
-            const currentUser = sessionStorage.getItem('chat_user') || getSenderName();
-            const isOwn = (data.name === currentUser);
-            renderMessage(key, data, isOwn);
-            if (!isOwn && data.read !== true && !notifiedKeys.has(key)) {
-                playBirdSound();
-                notifiedKeys.add(key);
-                messagesRef.child(key).update({ read: true }).catch(() => {});
-            }
-            if (isInitialLoad) {
-                isInitialLoad = false;
-                setTimeout(rebuildDateSeparators, 300);
-            }
-        });
+        function initChatListeners() {
+            if (chatListenersInitialized) return;
+            chatListenersInitialized = true;
 
-        messagesRef.on('child_changed', (snapshot) => {
-            const data = snapshot.val();
-            if (data.read !== undefined) updateCheckMark(snapshot.key, data.read);
-        });
+            messagesRef.orderByChild('timestamp').limitToLast(100).on('child_added', (snapshot) => {
+                const key = snapshot.key;
+                const data = snapshot.val();
+                const currentUser = sessionStorage.getItem('chat_user') || getSenderName();
+                const isOwn = (data.name === currentUser);
+                renderMessage(key, data, isOwn);
+                if (!isOwn && data.read !== true && !notifiedKeys.has(key)) {
+                    playBirdSound();
+                    notifiedKeys.add(key);
+                    messagesRef.child(key).update({ read: true }).catch(() => {});
+                }
+                if (isInitialLoad) {
+                    isInitialLoad = false;
+                    setTimeout(rebuildDateSeparators, 300);
+                }
+            });
 
-        messagesRef.on('child_removed', (snapshot) => {
-            const el = container.querySelector(`[data-key="${snapshot.key}"]`);
-            if (el) {
-                el.style.transition = 'opacity 0.2s';
-                el.style.opacity = '0';
-                setTimeout(() => { el.remove();
-                    updateEmptyState();
-                    cleanupDateSeparators();
-                    rebuildDateSeparators(); }, 200);
-            }
-        });
+            messagesRef.on('child_changed', (snapshot) => {
+                const data = snapshot.val();
+                if (data.read !== undefined) updateCheckMark(snapshot.key, data.read);
+            });
+
+            messagesRef.on('child_removed', (snapshot) => {
+                const el = container.querySelector(`[data-key="${snapshot.key}"]`);
+                if (el) {
+                    el.style.transition = 'opacity 0.2s';
+                    el.style.opacity = '0';
+                    setTimeout(() => { el.remove();
+                        updateEmptyState();
+                        cleanupDateSeparators();
+                        rebuildDateSeparators(); }, 200);
+                }
+            });
+        }
 
         // ============================================================
-        // 17. KIRIM PESAN (Chat + File)
+        // 21. KIRIM PESAN (Chat + File)
         // ============================================================
         let pendingFile = null;
         let isUploading = false;
@@ -2640,7 +3455,7 @@
         }
 
         // ============================================================
-        // 18. EMOJI PICKER (Chat)
+        // 22. EMOJI PICKER (Chat)
         // ============================================================
         let isEmojiPickerVisible = false;
         emojiToggle.addEventListener('click', (e) => {
@@ -2668,7 +3483,7 @@
         });
 
         // ============================================================
-        // 19. EVENT LISTENERS (Chat)
+        // 23. EVENT LISTENERS (Chat)
         // ============================================================
         sendBtn.addEventListener('click', sendMessage);
         messageInput.addEventListener('keydown', (e) => {
@@ -2681,7 +3496,7 @@
         });
 
         // ============================================================
-        // 20. CALL HISTORY UI
+        // 24. CALL HISTORY UI
         // ============================================================
 
         function openCallHistory() {
@@ -2721,7 +3536,7 @@
         });
 
         // ============================================================
-        // 21. CALL HISTORY - SAVE & RENDER
+        // 25. CALL HISTORY - SAVE & RENDER
         // ============================================================
 
         function saveCallRecord(type, isVideo, callerName, calleeName, status, duration, startTime, endTime) {
@@ -2885,7 +3700,7 @@
         });
 
         // ============================================================
-        // 22. WEBRTC - CALL LOGIC (dengan Call History)
+        // 26. WEBRTC - CALL LOGIC
         // ============================================================
 
         function getCallerName() {
@@ -2910,7 +3725,6 @@
             toggleVideoBtn.innerHTML = '<i class="fas fa-video"></i>';
             isMuted = false;
             isVideoOff = false;
-            // Tampilkan tombol switch camera hanya untuk video call
             switchCameraBtn.style.display = video ? 'flex' : 'none';
         }
 
@@ -3057,7 +3871,7 @@
         }
 
         // ============================================================
-        // 23. FUNGSI SWITCH CAMERA
+        // 27. SWITCH CAMERA
         // ============================================================
         async function switchCamera() {
             if (!isVideoCall || !localStream) {
@@ -3065,19 +3879,15 @@
             }
 
             try {
-                // Tentukan mode berikutnya
                 const nextFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
-                
-                // Dapatkan track video saat ini
+
                 const videoTracks = localStream.getVideoTracks();
                 if (videoTracks.length === 0) {
                     return;
                 }
 
-                // Hentikan track video lama
                 videoTracks.forEach(track => track.stop());
 
-                // Dapatkan stream baru dengan mode kamera yang dipilih
                 const constraints = {
                     audio: false,
                     video: {
@@ -3094,16 +3904,11 @@
                     throw new Error('Tidak dapat mengakses kamera');
                 }
 
-                // Ganti track video di localStream
                 localStream.removeTrack(videoTracks[0]);
                 localStream.addTrack(newVideoTrack);
-
-                // Update local video
                 localVideo.srcObject = localStream;
 
-                // Update peer connection
                 if (peerConnection) {
-                    // Cari sender video
                     const senders = peerConnection.getSenders();
                     const videoSender = senders.find(sender => sender.track && sender.track.kind === 'video');
                     if (videoSender) {
@@ -3121,7 +3926,7 @@
         }
 
         // ============================================================
-        // 24. MULAI PANGGILAN (Caller)
+        // 28. MULAI PANGGILAN (Caller)
         // ============================================================
         async function startCall(video) {
             if (currentCallId) {
@@ -3223,7 +4028,7 @@
         }
 
         // ============================================================
-        // 25. MENERIMA PANGGILAN (Callee)
+        // 29. MENERIMA PANGGILAN (Callee)
         // ============================================================
         function acceptIncomingCall() {
             if (!incomingCallId) return;
@@ -3318,7 +4123,7 @@
         }
 
         // ============================================================
-        // 26. LISTENER PANGGILAN MASUK
+        // 30. LISTENER PANGGILAN MASUK
         // ============================================================
         function listenForIncomingCalls() {
             callsRef.on('child_added', (snapshot) => {
@@ -3380,7 +4185,7 @@
         }
 
         // ============================================================
-        // 27. TOMBOL PANGGILAN
+        // 31. TOMBOL PANGGILAN
         // ============================================================
         voiceCallBtn.addEventListener('click', () => {
             startCall(false);
@@ -3391,7 +4196,7 @@
         });
 
         // ============================================================
-        // 28. TOMBOL INCOMING CALL
+        // 32. TOMBOL INCOMING CALL
         // ============================================================
         incAcceptBtn.addEventListener('click', () => {
             stopRingtone();
@@ -3417,7 +4222,7 @@
         });
 
         // ============================================================
-        // 29. TOMBOL KONTROL PANGGILAN
+        // 33. TOMBOL KONTROL PANGGILAN
         // ============================================================
         endCallBtn.addEventListener('click', () => {
             if (confirm('Akhiri panggilan?')) {
@@ -3452,11 +4257,10 @@
             }
         });
 
-        // Tombol Switch Camera
         switchCameraBtn.addEventListener('click', switchCamera);
 
         // ============================================================
-        // 30. CLEANUP PANGGILAN DI FIREBASE
+        // 34. CLEANUP PANGGILAN DI FIREBASE
         // ============================================================
         callsRef.on('child_removed', (snapshot) => {
             const removedId = snapshot.key;
@@ -3483,25 +4287,18 @@
         });
 
         // ============================================================
-        // 31. INISIALISASI
+        // 35. INISIALISASI
         // ============================================================
         const savedName = sessionStorage.getItem('chat_user');
         if (savedName) nameInput.value = savedName;
-        messageInput.focus();
 
-        setTimeout(() => {
-            updateEmptyState();
-            setTimeout(rebuildDateSeparators, 500);
-        }, 300);
+        showLoginPage();
 
         const observer = new MutationObserver(() => updateEmptyState());
         observer.observe(container, { childList: true, subtree: true });
 
-        listenForIncomingCalls();
-
-        console.log('💬 Ja\'O Chating & Call + Ikon Modern siap!');
-        console.log('📋 Gunakan ikon Font Awesome untuk tampilan lebih segar.');
-        console.log('📷 Tombol ganti kamera tersedia saat panggilan video.');
+        console.log('💬 Ja\'O Chating & Call dengan header responsif siap!');
+        console.log('📱 Header menyesuaikan ukuran untuk semua layar.');
     </script>
 </body>
 </html>
